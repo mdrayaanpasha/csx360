@@ -1,0 +1,10 @@
+{
+    "version": 2,
+    "routes": [
+      {
+        "src": "/brand/([a-zA-Z0-9-_]+)",
+        "dest": "/"
+      }
+    ]
+  }
+  
