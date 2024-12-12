@@ -243,7 +243,7 @@ const BrandDetails = () => {
         {/* Complaints Over Time Section */}
         <div style={{ flex: '0 0 40%', padding: '20px', border: '1px solid #ddd', borderRadius: '10px' }}>
           <div style={{ backgroundColor: '#f5f5f5', borderRadius: '10px', padding: '10px', marginBottom: '20px' }}>
-            <Typography variant="h5" color="textPrimary">Complaints Over Time</Typography>
+            <Typography variant="h5" color="textPrimary">Engagement Score</Typography>
           </div>
           
           <div style={{ height: '300px', borderRadius: '10px', marginTop: '20px' }}>
