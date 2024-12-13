@@ -117,7 +117,7 @@ const BrandDetails = () => {
       </Typography>
 
         {/* ====Brand Description Section==== */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap:'wrap', gap: '20px' }}>
           <div style={{ flex: 1, margin: '10px' }}>
             <div style={{
               backgroundColor: '#fafafa',
