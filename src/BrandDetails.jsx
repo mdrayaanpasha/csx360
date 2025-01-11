@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Typography, Grid, CircularProgress, Chip } from '@mui/material';
+import { Typography, Grid, CircularProgress, Chip, TextField, Button } from '@mui/material';
 import { ShoppingCart, Star, RateReview, Report } from '@mui/icons-material';
 import { Line } from 'react-chartjs-2';
 import { Doughnut } from 'react-chartjs-2';
@@ -20,23 +20,28 @@ ChartJS.register(
 );
 
 const BrandDetails = () => {
-  const { brandId } = useParams();
+  const { brandId: initialBrandId } = useParams();
   const [brandData, setBrandData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [brandId, setBrandId] = useState(initialBrandId || '');
+  const [retrySearch, setRetrySearch] = useState(false);
 
   useEffect(() => {
     const fetchBrandData = async () => {
+      if (!brandId) return;
+      setLoading(true);
       try {
         const response = await axios.post(
-          `https://brands.cx360.in/api/dashboard`,
+          "https://brands.cx360.in/api/dashboard",
           { id: brandId },
           { headers: { 'Content-Type': 'application/json' } }
         );
         setBrandData(response.data);
         setLoading(false);
+        setError(null);
       } catch (err) {
-        setError('Error fetching brand data');
+        setError('Error fetching brand data. Please try another brand ID.');
         setLoading(false);
       }
     };
@@ -44,12 +49,46 @@ const BrandDetails = () => {
     fetchBrandData();
   }, [brandId]);
 
+  const handleBrandIdChange = (event) => {
+    setBrandId(event.target.value);
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    setRetrySearch(false);
+    setBrandData(null);
+    setLoading(true);
+  };
+
+  const handleSearch = () => {
+    setRetrySearch(true);
+    setError(null);
+    setBrandData(null);
+    setLoading(true);
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
 
   if (error) {
-    return <Typography color="error">{error}</Typography>;
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <Typography color="error">{error}</Typography>
+        <div style={{ marginTop: '20px' }}>
+          <TextField
+            label="Enter Brand ID"
+            value={brandId}
+            onChange={handleBrandIdChange}
+            variant="outlined"
+            size="small"
+            style={{ marginBottom: '20px', marginRight: '10px' }}
+          />
+        
+          
+        </div>
+      </div>
+    );
   }
 
   // Sentiment Analysis Donut Chart Data
@@ -111,39 +150,54 @@ const BrandDetails = () => {
   return (
     <div style={{ fontFamily: 'Roboto, sans-serif', padding: '20px' }}>
       {/* ====Brand Information Section==== */}
+       {/* Brand Search Input */}
+       {!retrySearch && !error && (
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <TextField
+            label="Enter Brand ID"
+            value={brandId}
+            onChange={handleBrandIdChange}
+            variant="outlined"
+            size="small"
+            style={{ marginBottom: '20px', marginRight: '10px' }}
+          />
+        
+        </div>
+      )}
+
       <Typography variant="h3" color="primary">{brandData.brand_name}</Typography>
       <Typography variant="h6" color="textSecondary" style={{ marginBottom: '20px' }}>
         {brandData.brand_tagline}
       </Typography>
 
-        {/* ====Brand Description Section==== */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap:'wrap', gap: '20px' }}>
-          <div style={{ flex: 1, margin: '10px' }}>
+     
+      {/* ====Brand Description Section==== */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
+        <div style={{ flex: 1, margin: '10px' }}>
+          <div style={{
+            backgroundColor: '#fafafa',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            padding: '16px',
+            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+          }}>
             <div style={{
-              backgroundColor: '#fafafa',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              padding: '16px',
-              boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+              backgroundColor: '#f0f0f0',
+              padding: '10px 16px',
+              borderBottom: '1px solid #ddd',
+              borderTopLeftRadius: '8px',
+              borderTopRightRadius: '8px',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              color: '#333',
             }}>
-              <div style={{
-                backgroundColor: '#f0f0f0',
-                padding: '10px 16px',
-                borderBottom: '1px solid #ddd',
-                borderTopLeftRadius: '8px',
-                borderTopRightRadius: '8px',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                color: '#333',
-              }}>
-                Brand Description
-              </div>
-              <div style={{ padding: '16px', color: '#555' }}>
-                <Typography variant="body1" color="textSecondary">{brandData.brand_description_500}</Typography>
-              </div>
+              Brand Description
             </div>
+            <div style={{ padding: '16px', color: '#555' }}>
+              <Typography variant="body1" color="textSecondary">{brandData.brand_description_500}</Typography>
+            </div>
+          </div>
         </div>
-
 
         {/* ====Brand Stats Section==== */}
         <div style={{ flex: 1, margin: '10px', display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
@@ -162,9 +216,7 @@ const BrandDetails = () => {
         </div>
       </div>
 
-      <hr/>
-
-     {/* ====Competitors and Best Sellers Section==== */}
+      {/* ====Competitors and Best Sellers Section==== */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', marginTop: '40px' }}>
         {/* Competitors Section */}
         <div style={{ flex: '1 1 45%' }}>
@@ -195,73 +247,59 @@ const BrandDetails = () => {
         </div>
       </div>
 
-
       {/* ====Charts and Sentiment Analysis Section==== */}
       <center>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', marginTop: '40px' }}>
-        {/* Sentiment Analysis Section */}
-        <div style={{ flex: '0 0 40%', padding: '20px', border: '1px solid #ddd', borderRadius: '10px' }}>
-          <div style={{ backgroundColor: '#f5f5f5', borderRadius: '10px', padding: '10px', marginBottom: '20px' }}>
-            <Typography variant="h5" color="textPrimary">Sentiment Analysis</Typography>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', marginTop: '40px' }}>
+          {/* Sentiment Analysis Section */}
+          <div style={{ flex: '0 0 40%', padding: '20px', border: '1px solid #ddd', borderRadius: '10px' }}>
+            <div style={{ backgroundColor: '#f5f5f5', borderRadius: '10px', padding: '10px', marginBottom: '20px' }}>
+              <Typography variant="h5" color="textPrimary">Sentiment Analysis</Typography>
+            </div>
+
+            <div style={{ height: '300px', borderRadius: '10px', marginTop: '20px' }}>
+              <Doughnut data={sentimentData} />
+            </div>
           </div>
 
-          <div style={{ height: '300px', borderRadius: '10px', marginTop: '20px' }}>
-            <Doughnut data={sentimentData} />
+          {/* Complaints Over Time Section */}
+          <div style={{ flex: '0 0 40%', padding: '20px', border: '1px solid #ddd', borderRadius: '10px' }}>
+            <div style={{ backgroundColor: '#f5f5f5', borderRadius: '10px', padding: '10px', marginBottom: '20px' }}>
+              <Typography variant="h5" color="textPrimary">Complaints Over Time</Typography>
+            </div>
+
+            <div style={{ height: '300px', borderRadius: '10px', marginTop: '20px' }}>
+              <Line data={complaintsChartData} />
+            </div>
           </div>
         </div>
-
-        {/* Complaints Over Time Section */}
-        <div style={{ flex: '0 0 40%', padding: '20px', border: '1px solid #ddd', borderRadius: '10px' }}>
-          <div style={{ backgroundColor: '#f5f5f5', borderRadius: '10px', padding: '10px', marginBottom: '20px' }}>
-            <Typography variant="h5" color="textPrimary">Complaints Over Time</Typography>
-          </div>
-          
-          <div style={{ height: '300px', borderRadius: '10px', marginTop: '20px' }}>
-            <Line data={complaintsChartData} />
-          </div>
-        </div>
-
-      </div>
       </center>
 
-
-{/* ====Ratings Over Time Section==== */}
-
+      {/* ====Ratings Over Time Section==== */}
       <center>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', marginTop: '40px' }}>
-{/* ====Ratings Over Time Section==== */}
-        <div style={{ flex: '0 0 40%', padding: '20px', border: '1px solid #ddd', borderRadius: '10px' }}>
-          <div style={{ backgroundColor: '#f5f5f5', borderRadius: '10px', padding: '10px', marginBottom: '20px' }}>
-            <Typography variant="h5" color="textPrimary">Sentiment Analysis</Typography>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', marginTop: '40px' }}>
+          {/* Ratings Over Time Section */}
+          <div style={{ flex: '0 0 40%', padding: '20px', border: '1px solid #ddd', borderRadius: '10px' }}>
+            <div style={{ backgroundColor: '#f5f5f5', borderRadius: '10px', padding: '10px', marginBottom: '20px' }}>
+              <Typography variant="h5" color="textPrimary">Ratings Over Time</Typography>
+            </div>
+
+            <div style={{ height: '300px', borderRadius: '10px', marginTop: '20px' }}>
+              <Line data={ratingsChartData} />
+            </div>
           </div>
 
-          <div style={{ height: '300px', borderRadius: '10px', marginTop: '20px' }}>
-          <Line data={ratingsChartData} />
+          {/* Engagement Over Time Section */}
+          <div style={{ flex: '0 0 40%', padding: '20px', border: '1px solid #ddd', borderRadius: '10px' }}>
+            <div style={{ backgroundColor: '#f5f5f5', borderRadius: '10px', padding: '10px', marginBottom: '20px' }}>
+              <Typography variant="h5" color="textPrimary">Engagement Over Time</Typography>
+            </div>
+
+            <div style={{ height: '300px', borderRadius: '10px', marginTop: '20px' }}>
+              <Line data={engagementChartData} />
+            </div>
           </div>
         </div>
-
-        {/* Complaints Over Time Section */}
-        <div style={{ flex: '0 0 40%', padding: '20px', border: '1px solid #ddd', borderRadius: '10px' }}>
-          <div style={{ backgroundColor: '#f5f5f5', borderRadius: '10px', padding: '10px', marginBottom: '20px' }}>
-            <Typography variant="h5" color="textPrimary">Engagement Score</Typography>
-          </div>
-          
-          <div style={{ height: '300px', borderRadius: '10px', marginTop: '20px' }}>
-          <Line data={engagementChartData} />
-          </div>
-        </div>
-
-      </div>
       </center>
-
-
-
-      
-
-
-
-
-      
     </div>
   );
 };
